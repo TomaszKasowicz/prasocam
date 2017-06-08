@@ -7,7 +7,14 @@ let sinon = require('sinon');
 let rewire = require('rewire');
 let expect = require('chai').expect;
 let logger = require('bunyan').createLogger({
-    name : 'PrasoCam_UT'
+    name : 'PrasoCam_UT',
+    streams : [
+        {
+            type : 'stream',
+            stream : process.stdout,
+            level : 'fatal'
+        }
+    ]
 });
 describe('Index JS Unit Tests', function() {
     let restify=require('restify');
@@ -351,6 +358,8 @@ describe('Index JS Unit Tests', function() {
             delete process.env.PRASO_PASS;
             let index = rewire('./../index.js');
             let main = index.__get__('Main');
+            let logger = index.__get__('logger');
+            logger.level('fatal');
             main();
             sinon.assert.callCount(serverMock.use, 5);
             sinon.assert.calledOnce(serverMock.get);
@@ -362,6 +371,8 @@ describe('Index JS Unit Tests', function() {
             let serveStaticSpy = sinon.spy(restify, 'serveStatic');
             let index = rewire('./../index.js');
             let main = index.__get__('Main');
+            let logger = index.__get__('logger');
+            logger.level('fatal');
             main();
             sinon.assert.callCount(serverMock.use, 5);
             sinon.assert.calledOnce(serverMock.get);
@@ -386,7 +397,7 @@ describe('Index JS Unit Tests', function() {
             incomingLogger(req, {}, next);
             sinon.assert.calledOnce(req.log.debug);
             sinon.assert.calledWith(req.log.debug, 'Recevied new Request.', 'PUT');
-            done()
+            done();
         });
     });
 });

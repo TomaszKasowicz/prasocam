@@ -10,8 +10,7 @@ const UserName = process.env.PRASO_USER;
 const Password = process.env.PRASO_PASS;
 const Path = '/prasocam.jpg';
 const port = process.env.PORT || 5000;
-const Prasocam = './images/prasocam.jpg';
-const Prasocam_Def = './images/prasocam_default.jpg';
+
 
 let logger = bunyan.createLogger({
     name : AppName,
