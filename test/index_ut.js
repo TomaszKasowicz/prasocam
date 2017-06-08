@@ -6,7 +6,9 @@
 let sinon = require('sinon');
 let rewire = require('rewire');
 let expect = require('chai').expect;
-
+let logger = require('bunyan').createLogger({
+    name : 'PrasoCam_UT'
+});
 describe('Index JS Unit Tests', function() {
     let restify=require('restify');
 
@@ -16,7 +18,7 @@ describe('Index JS Unit Tests', function() {
         before(function (done) {
             process.env.PRASO_USER = 'test';
             process.env.PRASO_PASS = 'test';
-            validatePutRequest = rewire('./../index.js').__get__('validatePutRequest');
+            validatePutRequest = rewire('./../index.js').__get__('_validatePutRequest');
             done();
         });
 
@@ -224,7 +226,7 @@ describe('Index JS Unit Tests', function() {
            index = rewire('./../index.js');
            putHandler = index.__get__('put');
            fsMockRestore = index.__set__('fs', fsMock);
-           validateRequestRestore = index.__set__('validatePutRequest', validateRequestStub);
+           validateRequestRestore = index.__set__('_validatePutRequest', validateRequestStub);
            done();
        });
 
@@ -242,7 +244,7 @@ describe('Index JS Unit Tests', function() {
 
        it('Should immediately send error response when req validation fails', function (done) {
            validateRequestStub.returns(new restify.BadRequestError('test error'));
-           putHandler({}, resMock, sinon.spy());
+           putHandler({ log : logger}, resMock, sinon.spy());
            sinon.assert.calledOnce(resMock.send);
            sinon.assert.calledWith(resMock.send, sinon.match.instanceOf(restify.BadRequestError));
            done();
@@ -277,7 +279,8 @@ describe('Index JS Unit Tests', function() {
 
         it('Should send error when unable to write file', function (done) {
             let req = {
-                body : 'test'
+                body : 'test',
+                log : logger
             };
             fsMock.writeFile.callsArgWith(3, { msg : 'someErrorMsg'});
             let ftypeRestore = index.__set__('filetype', sinon.stub().returns({ ext : 'jpg'}));
@@ -293,7 +296,8 @@ describe('Index JS Unit Tests', function() {
 
         it('Should send Created when File Writtend', function (done) {
             let req = {
-                body : 'test'
+                body : 'test',
+                log : logger
             };
             fsMock.writeFile.callsArg(3);
             let ftypeRestore = index.__set__('filetype', sinon.stub().returns({ ext : 'jpg'}));
@@ -347,7 +351,7 @@ describe('Index JS Unit Tests', function() {
             let index = rewire('./../index.js');
             let main = index.__get__('Main');
             main();
-            sinon.assert.calledTwice(serverMock.use);
+            sinon.assert.callCount(serverMock.use, 5);
             sinon.assert.calledOnce(serverMock.get);
             sinon.assert.notCalled(serverMock.put);
             done();
@@ -358,7 +362,7 @@ describe('Index JS Unit Tests', function() {
             let index = rewire('./../index.js');
             let main = index.__get__('Main');
             main();
-            sinon.assert.calledTwice(serverMock.use);
+            sinon.assert.callCount(serverMock.use, 5);
             sinon.assert.calledOnce(serverMock.get);
             sinon.assert.calledOnce(serveStaticSpy);
             sinon.assert.calledWith(serveStaticSpy, {
@@ -368,6 +372,20 @@ describe('Index JS Unit Tests', function() {
             });
             sinon.assert.calledOnce(serverMock.put);
             done();
+        });
+
+        it('Should log incomming message', function (done) {
+            let index = rewire('./../index.js');
+            let incomingLogger = index.__get__('_incomingLogger');
+            let req = {
+                log : { debug : sinon.spy() },
+                method : 'PUT'
+            };
+            let next = sinon.spy();
+            incomingLogger(req, {}, next);
+            sinon.assert.calledOnce(req.log.debug);
+            sinon.assert.calledWith(req.log.debug, 'Recevied new Request.', 'PUT');
+            done()
         });
     });
 });

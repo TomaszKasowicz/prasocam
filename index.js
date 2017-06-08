@@ -3,7 +3,9 @@
 let restify = require('restify');
 let fs = require('fs');
 let filetype = require('file-type');
+let bunyan = require('bunyan');
 
+const AppName = 'PrasoCam';
 const UserName = process.env.PRASO_USER;
 const Password = process.env.PRASO_PASS;
 const Path = '/prasocam.jpg';
@@ -11,7 +13,18 @@ const port = process.env.PORT || 5000;
 const Prasocam = './images/prasocam.jpg';
 const Prasocam_Def = './images/prasocam_default.jpg';
 
-function validatePutRequest(req) {
+let logger = bunyan.createLogger({
+    name : AppName,
+    streams : [
+        {
+            type : 'stream',
+            stream : process.stdout,
+            level : 'debug'
+        }
+    ]
+});
+
+function _validatePutRequest(req) {
     if (!req.headers) {
         return new restify.BadRequestError('Missing Headers');
     }
@@ -49,8 +62,9 @@ function validatePutRequest(req) {
 }
 
 function put(req, res, next) {
-    let validationError = validatePutRequest(req);
+    let validationError = _validatePutRequest(req);
     if (validationError) {
+        req.log.debug('Request validation error.', validationError.message);
         return res.send(validationError);
     }
 
@@ -60,24 +74,35 @@ function put(req, res, next) {
         return res.send(new restify.InvalidContentError('Missing Body or body Not JPG'));
     }
 
-    try {
-        fs.writeFile('./images/prasocam.jpg', req.body, 'binary', function writeCallback(err) {
-            if(err) {
-                return res.send(new restify.InternalServerError(err));
-            }
-            return res.send(201, "File written");
-        });
-    } catch (err) {
-        return res.send(new restify.InternalServerError(err));
-    }
+    req.log.info('Received new image. Trying to write');
+    fs.writeFile('./images/prasocam.jpg', req.body, 'binary', function writeCallback(err) {
+        if(err) {
+            req.log.error('Unable to write image', ftype, ( req.body ? req.body.length : 0), err.message);
+            return res.send(new restify.InternalServerError(err));
+        }
+        req.log.info('File written');
+        return res.send(201, "File written");
+    });
+}
+
+function _incomingLogger(req, res, next) {
+    req.log.debug('Recevied new Request.', req.method);
+    return next();
 }
 
 function Main() {
     //let logger = require('bunyan').createLogger();
-    let server = restify.createServer({ name : 'PrasoCam' });
+    let server = restify.createServer({
+        name : AppName,
+        log : logger
+    });
+
+    server.use(restify.requestLogger());
+    server.use(_incomingLogger);
 
     server.use(restify.authorizationParser());
     server.use(restify.bodyParser({ maxBodySize : 512*1024 }));
+    server.use(restify.gzipResponse());
 
     server.get(Path, restify.serveStatic({
         directory: './images',
@@ -86,9 +111,14 @@ function Main() {
     }));
 
     if(UserName !== undefined && Password !== undefined) {
+        logger.info('UserName and Password configured. Enabling PUT');
         server.put(Path, put);
+    } else {
+        logger.warn('UserName and Password not configured, only allowing GET operation');
     }
+
     server.listen(port);
+    logger.info('Server listening on port ', port);
 }
 
 /* istanbul ignore next */
