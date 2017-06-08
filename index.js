@@ -105,7 +105,7 @@ function Main() {
     server.use(restify.bodyParser({ maxBodySize : 512*1024 }));
     server.use(restify.gzipResponse());
 
-    server.get(Path, restify.serveStatic({
+    server.get('/', restify.serveStatic({
         directory: './images',
         file : 'prasocam.jpg',
         maxAge: 12000
