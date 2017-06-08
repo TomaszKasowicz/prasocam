@@ -7,8 +7,10 @@
   },
   "main": "index.js",
   "scripts": {
-    "start" : "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "test": "npm run-script analyze-coverage && npm run-script check-coverage",
+    "analyze-coverage": "istanbul cover node_modules/mocha/bin/_mocha -x \"test_scripts/**\"  -include-all-sources true -- -R spec --timeout 5000",
+    "check-coverage": "istanbul check-coverage --statement 92 --branch 80 --function 91"
   },
   "repository": {
     "type": "git",
@@ -21,6 +23,14 @@
   },
   "homepage": "https://github.com/TomaszKasowicz/prasocam#readme",
   "dependencies": {
+    "file-type": "^5.0.0",
     "restify": "^4.3.0"
+  },
+  "devDependencies": {
+    "chai": "^4.0.2",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.4.2",
+    "rewire": "^2.5.2",
+    "sinon": "^2.3.2"
   }
 }

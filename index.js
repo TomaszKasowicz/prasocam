@@ -1,15 +1,21 @@
 'use strict';
 
-const restify = require('restify');
-const fs = require('fs');
-const UserName = process.env.PRASO_USERNAME;
-const Password = process.env.PRASO_PASSWD;
+let restify = require('restify');
+let fs = require('fs');
+let filetype = require('file-type');
 
-let port = process.env.PORT || 5000;
+const UserName = process.env.PRASO_USER;
+const Password = process.env.PRASO_PASS;
+const Path = '/prasocam.jpg';
+const port = process.env.PORT || 5000;
 
 function validatePutRequest(req) {
+    if (!req.headers) {
+        return new restify.BadRequestError('Missing Headers');
+    }
+
     if (!req.headers.authorization) {
-        return new restify.NotAuthorizedError('Missing Authorization Header');
+        return new restify.BadRequestError('Missing Authorization Header');
     }
 
     let auth = req.authorization;
@@ -31,44 +37,55 @@ function validatePutRequest(req) {
     }
 
     if (!req.is('jpg')) {
-        return new restify.InvalidContentError('Not jpg');
+        return new restify.InvalidContentError('Not jpeg');
     }
 
 }
+
 function put(req, res, next) {
     let validationError = validatePutRequest(req);
     if (validationError) {
         return res.send(validationError);
     }
 
-    let body=req.body;
+    let ftype = filetype(req.body);
 
-    fs.writeFile('./images/prasocam.jpg', body, 'binary', function writeCallback(err) {
-       if(err) {
-           return res.send(new restify.InternalServerError(err));
-       }
-       return res.send(201, "File written");
-    });
+    if (null === ftype || ftype.ext !== 'jpg') {
+        return res.send(new restify.InvalidContentError('Missing Body or body Not JPG'));
+    }
+
+    try {
+        fs.writeFile('./images/prasocam.jpg', req.body, 'binary', function writeCallback(err) {
+            if(err) {
+                return res.send(new restify.InternalServerError(err));
+            }
+            return res.send(201, "File written");
+        });
+    } catch (err) {
+        return res.send(new restify.InternalServerError(err));
+    }
 }
 
-let server = restify.createServer({
-    name : 'PrasoCam'
-});
+function Main() {
+    let server = restify.createServer({ name : 'PrasoCam' });
 
-server.use(restify.queryParser());
-server.use(restify.authorizationParser());
-server.use(restify.dateParser());
-server.use(restify.bodyParser({ maxBodySize : 1000000 }));
+    server.use(restify.authorizationParser());
+    server.use(restify.bodyParser({ maxBodySize : 512*1024 }));
 
-server.get('/prasocam.jpg', restify.serveStatic({
-    directory: './images',
-    file : 'prasocam.jpg',
-    default : 'prasocam_default.jpg',
-    maxAge: 12000
-}));
+    server.get(Path, restify.serveStatic({
+        directory: './images',
+        file : 'prasocam.jpg',
+        default : 'prasocam_default.jpg',
+        maxAge: 12000
+    }));
 
-if(UserName !== undefined && Password !== undefined) {
-    server.put('/prasocam.jpg', put);
+    if(UserName !== undefined && Password !== undefined) {
+        server.put(Path, put);
+    }
+    server.listen(port);
 }
 
-server.listen(port);
+/* istanbul ignore next */
+if (require.main === module) {
+    Main();
+}
