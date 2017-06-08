@@ -8,6 +8,8 @@ const UserName = process.env.PRASO_USER;
 const Password = process.env.PRASO_PASS;
 const Path = '/prasocam.jpg';
 const port = process.env.PORT || 5000;
+const Prasocam = './images/prasocam.jpg';
+const Prasocam_Def = './images/prasocam_default.jpg';
 
 function validatePutRequest(req) {
     if (!req.headers) {
@@ -67,6 +69,7 @@ function put(req, res, next) {
 }
 
 function Main() {
+    //let logger = require('bunyan').createLogger();
     let server = restify.createServer({ name : 'PrasoCam' });
 
     server.use(restify.authorizationParser());
@@ -75,7 +78,6 @@ function Main() {
     server.get(Path, restify.serveStatic({
         directory: './images',
         file : 'prasocam.jpg',
-        default : 'prasocam_default.jpg',
         maxAge: 12000
     }));
 

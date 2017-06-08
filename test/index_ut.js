@@ -341,7 +341,6 @@ describe('Index JS Unit Tests', function() {
             sinon.assert.calledWith(serveStaticSpy, {
                 directory: './images',
                 file : 'prasocam.jpg',
-                default : 'prasocam_default.jpg',
                 maxAge: 12000
             });
             sinon.assert.calledOnce(serverMock.put);
