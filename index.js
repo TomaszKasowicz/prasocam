@@ -12,12 +12,12 @@ const Prasocam = './images/prasocam.jpg';
 const Prasocam_Def = './images/prasocam_default.jpg';
 
 function validatePutRequest(req) {
-    if (req.headers['x-forwarded-proto'] !== 'https') {
-        return new restify.NotAuthorizedError('SSL Required');
-    }
-
     if (!req.headers) {
         return new restify.BadRequestError('Missing Headers');
+    }
+
+    if (!req.headers['x-forwarded-proto'] || req.headers['x-forwarded-proto'] !== 'https') {
+        return new restify.NotAuthorizedError('https required');
     }
 
     if (!req.headers.authorization) {
@@ -53,13 +53,13 @@ function put(req, res, next) {
     if (validationError) {
         return res.send(validationError);
     }
-/*
+
     let ftype = filetype(req.body);
 
     if (null === ftype || ftype.ext !== 'jpg') {
         return res.send(new restify.InvalidContentError('Missing Body or body Not JPG'));
     }
-*/
+
     try {
         fs.writeFile('./images/prasocam.jpg', req.body, 'binary', function writeCallback(err) {
             if(err) {

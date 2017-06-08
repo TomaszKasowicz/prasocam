@@ -33,8 +33,22 @@ describe('Index JS Unit Tests', function() {
             done();
         });
 
-        it('Should Return Error when Authorization Header is missing', function (done) {
+        it('Should Return Error when x-forwarded-proto header is missing', function (done) {
             let req = { headers : {} };
+            let err = validatePutRequest(req);
+            expect(err).to.be.eql(new restify.NotAuthorizedError('https required'));
+            done();
+        });
+
+        it('Should Return Error when x-forwarded-proto header is not https', function (done) {
+            let req = { headers : { "x-forwarded-proto" : 'http'} };
+            let err = validatePutRequest(req);
+            expect(err).to.be.eql(new restify.NotAuthorizedError('https required'));
+            done();
+        });
+
+        it('Should Return Error when Authorization Header is missing', function (done) {
+            let req = { headers : {"x-forwarded-proto" : 'https'} };
             let err = validatePutRequest(req);
             expect(err).to.be.eql(new restify.BadRequestError('Missing Authorization Header'));
             done();
@@ -43,6 +57,7 @@ describe('Index JS Unit Tests', function() {
         it('Should return Error when authorization scheme is missing', function (done) {
             let req = {
                 headers: {
+                    "x-forwarded-proto" : 'https',
                     authorization : 'Auth Header'
                 },
                 authorization: {}
@@ -55,6 +70,7 @@ describe('Index JS Unit Tests', function() {
         it('Should return Error when authorization scheme is not Basic', function (done) {
             let req = {
                 headers: {
+                    "x-forwarded-proto" : 'https',
                     authorization : 'Auth Header'
                 },
                 authorization: { scheme : 'Signature'}
@@ -67,6 +83,7 @@ describe('Index JS Unit Tests', function() {
         it('Should return Error when authorization.basic is missing', function (done) {
             let req = {
                 headers: {
+                    "x-forwarded-proto" : 'https',
                     authorization : 'Auth Header'
                 },
                 authorization: {
@@ -81,6 +98,7 @@ describe('Index JS Unit Tests', function() {
         it('Should return Error when authorization.basic.username is missing', function (done) {
             let req = {
                 headers: {
+                    "x-forwarded-proto" : 'https',
                     authorization : 'Auth Header'
                 },
                 authorization: {
@@ -96,6 +114,7 @@ describe('Index JS Unit Tests', function() {
         it('Should return Error when authorization.basic.username is wrong', function (done) {
             let req = {
                 headers: {
+                    "x-forwarded-proto" : 'https',
                     authorization : 'Auth Header'
                 },
                 authorization: {
@@ -113,6 +132,7 @@ describe('Index JS Unit Tests', function() {
         it('Should return Error when authorization.basic.password is missing', function (done) {
             let req = {
                 headers: {
+                    "x-forwarded-proto" : 'https',
                     authorization : 'Auth Header'
                 },
                 authorization: {
@@ -130,6 +150,7 @@ describe('Index JS Unit Tests', function() {
         it('Should return Error when authorization.basic.password is wrong', function (done) {
             let req = {
                 headers: {
+                    "x-forwarded-proto" : 'https',
                     authorization : 'Auth Header'
                 },
                 authorization: {
@@ -148,6 +169,7 @@ describe('Index JS Unit Tests', function() {
         it('Should return error when Content-Type is not jpeg', function (done) {
             let req = {
                 headers: {
+                    "x-forwarded-proto" : 'https',
                     authorization: 'Auth Header'
                 },
                 authorization: {
@@ -167,6 +189,7 @@ describe('Index JS Unit Tests', function() {
         it('Should pass validation when credentials and Content-Type is OK', function (done) {
             let req = {
                 headers: {
+                    "x-forwarded-proto" : 'https',
                     authorization: 'Auth Header'
                 },
                 authorization: {
