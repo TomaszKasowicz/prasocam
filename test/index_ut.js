@@ -251,7 +251,7 @@ describe('Index JS Unit Tests', function() {
        });
 
         it('Should send error when body is missing', function (done) {
-            putHandler({}, resMock, sinon.spy());
+            putHandler({ log : logger}, resMock, sinon.spy());
             sinon.assert.calledOnce(resMock.send);
             sinon.assert.calledWith(resMock.send, sinon.match.instanceOf(restify.InvalidContentError));
             done();
@@ -259,6 +259,7 @@ describe('Index JS Unit Tests', function() {
 
         it('Should send error when body is not jpeg', function (done) {
             let req = {
+                log : logger,
                 body : new Buffer(12)
             };
             putHandler(req, resMock, sinon.spy());
@@ -268,7 +269,7 @@ describe('Index JS Unit Tests', function() {
         });
 
         it('Should send error when body is not jpeg but different file', function (done) {
-            let req = {};
+            let req = { log : logger};
             let ftypeRestore = index.__set__('filetype', sinon.stub().returns({ ext : 'png'}));
             putHandler(req, resMock, sinon.spy());
             sinon.assert.calledOnce(resMock.send);

@@ -71,6 +71,7 @@ function put(req, res, next) {
     let ftype = filetype(req.body);
 
     if (null === ftype || ftype.ext !== 'jpg') {
+        req.log.warn('Missing Body or body Not JPG');
         return res.send(new restify.InvalidContentError('Missing Body or body Not JPG'));
     }
 
