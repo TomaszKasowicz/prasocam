@@ -12,10 +12,10 @@ const Prasocam = './images/prasocam.jpg';
 const Prasocam_Def = './images/prasocam_default.jpg';
 
 function validatePutRequest(req) {
-    if (req.protocol !== 'https') {
+    if (req.headers['x-forwarded-proto'] !== 'https') {
         return new restify.NotAuthorizedError('SSL Required');
     }
-    
+
     if (!req.headers) {
         return new restify.BadRequestError('Missing Headers');
     }
