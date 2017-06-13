@@ -133,7 +133,7 @@ function Main() {
     server.listen(port);
     logger.info('Server listening on port ', port);
 
-    setInterval(_getAlive, 300000);
+    setInterval(_getAlive, process.env.ALIVE_INTERVAL || 300000);
 }
 
 /* istanbul ignore next */
