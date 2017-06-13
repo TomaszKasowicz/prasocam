@@ -217,6 +217,46 @@ describe('Index JS Unit Tests', function() {
         });
     });
 
+    describe('Alive handling', function () {
+       let index;
+
+       before(function (done) {
+           index = rewire('./../index.js');
+           done();
+       });
+
+       after(function (done) {
+           done();
+       });
+
+       it('Should invoke http.get when called', function (done) {
+           let httpMock = {
+               get : sinon.spy()
+           };
+
+           let httpRestore = index.__set__('http', httpMock);
+           let _getAlive = index.__get__('_getAlive');
+           _getAlive();
+           sinon.assert.calledOnce(httpMock.get);
+           sinon.assert.calledWith(httpMock.get, 'http://prasocam.herokuapp.com/alive');
+           httpRestore();
+           done();
+       });
+
+       it('Should respond with 200 for a GET for /alive', function (done) {
+           let aliveHandler = index.__get__('_aliveHandler');
+           let req = sinon.spy();
+           let res = { send: sinon.spy()};
+           let next = sinon.spy();
+
+           aliveHandler(req,res,next);
+           sinon.assert.calledOnce(res.send);
+           sinon.assert.calledWith(res.send, 200);
+           sinon.assert.calledOnce(next);
+           done();
+       });
+    });
+
     describe('Put handler', function () {
        let index;
        let putHandler;
@@ -363,12 +403,14 @@ describe('Index JS Unit Tests', function() {
             logger.level('fatal');
             main();
             sinon.assert.callCount(serverMock.use, 5);
-            sinon.assert.calledOnce(serverMock.get);
+            sinon.assert.calledTwice(serverMock.get);
+            sinon.assert.calledWith(serverMock.get, '/');
+            sinon.assert.calledWith(serverMock.get, '/alive');
             sinon.assert.notCalled(serverMock.put);
             done();
         });
 
-        it('Should not add Static GET Handler', function (done) {
+        it('Should add Static GET Handler', function (done) {
             let serveStaticSpy = sinon.spy(restify, 'serveStatic');
             let index = rewire('./../index.js');
             let main = index.__get__('Main');
@@ -376,7 +418,9 @@ describe('Index JS Unit Tests', function() {
             logger.level('fatal');
             main();
             sinon.assert.callCount(serverMock.use, 5);
-            sinon.assert.calledOnce(serverMock.get);
+            sinon.assert.calledTwice(serverMock.get);
+            sinon.assert.calledWith(serverMock.get, '/');
+            sinon.assert.calledWith(serverMock.get, '/alive');
             sinon.assert.calledOnce(serveStaticSpy);
             sinon.assert.calledWith(serveStaticSpy, {
                 directory: './images',
