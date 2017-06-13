@@ -4,6 +4,7 @@ let restify = require('restify');
 let fs = require('fs');
 let filetype = require('file-type');
 let bunyan = require('bunyan');
+let newrelic = require('./newrelic');
 
 const AppName = 'PrasoCam';
 const UserName = process.env.PRASO_USER;

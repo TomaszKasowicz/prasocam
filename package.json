@@ -24,6 +24,7 @@
   "homepage": "https://github.com/TomaszKasowicz/prasocam#readme",
   "dependencies": {
     "file-type": "^5.0.0",
+    "newrelic": "^1.40.0",
     "restify": "^4.3.0"
   },
   "devDependencies": {
