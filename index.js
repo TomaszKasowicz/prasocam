@@ -5,6 +5,7 @@ let restify = require('restify');
 let fs = require('fs');
 let filetype = require('file-type');
 let bunyan = require('bunyan');
+let http = require('http');
 
 const AppName = 'PrasoCam';
 const UserName = process.env.PRASO_USER;
@@ -91,6 +92,15 @@ function _incomingLogger(req, res, next) {
     return next();
 }
 
+function _aliveHandler(req,res,next) {
+    res.send(200);
+    return next();
+}
+
+function _getAlive() {
+    http.get('http://prasocam.herokuapp.com/alive');
+}
+
 function Main() {
     //let logger = require('bunyan').createLogger();
     let server = restify.createServer({
@@ -111,6 +121,8 @@ function Main() {
         maxAge: 12000
     }));
 
+    server.get('/alive', _aliveHandler);
+
     if(UserName !== undefined && Password !== undefined) {
         logger.info('UserName and Password configured. Enabling PUT');
         server.put(Path, put);
@@ -120,6 +132,8 @@ function Main() {
 
     server.listen(port);
     logger.info('Server listening on port ', port);
+
+    setInterval(_getAlive, 300000);
 }
 
 /* istanbul ignore next */
