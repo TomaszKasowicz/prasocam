@@ -25,6 +25,7 @@ describe('Index JS Unit Tests', function() {
         before(function (done) {
             process.env.PRASO_USER = 'test';
             process.env.PRASO_PASS = 'test';
+            process.env.NEW_RELIC_ENABLED=false;
             validatePutRequest = rewire('./../index.js').__get__('_validatePutRequest');
             done();
         });
