@@ -118,7 +118,7 @@ function Main() {
     server.get('/', restify.serveStatic({
         directory: './images',
         file : 'prasocam.jpg',
-        maxAge: process.env.MAX_AGE || 120
+        maxAge: Number(process.env.MAX_AGE || 120)
     }));
 
     server.get('/alive', _aliveHandler);
