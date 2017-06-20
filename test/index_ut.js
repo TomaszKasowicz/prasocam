@@ -425,7 +425,7 @@ describe('Index JS Unit Tests', function() {
             sinon.assert.calledWith(serveStaticSpy, {
                 directory: './images',
                 file : 'prasocam.jpg',
-                maxAge: 12000
+                maxAge: 120
             });
             sinon.assert.calledOnce(serverMock.put);
             done();
